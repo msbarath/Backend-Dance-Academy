@@ -23,7 +23,8 @@ router.get("/count", async (req, res) => {
         const count = await Student.countDocuments();
         res.json({ count });
     } catch (err) {
-        res.status(500).json({ message: "Error fetching count", error: err.message });
+        console.error("studentCount:", err);
+        res.status(500).json({ message: "Error fetching count" });
     }
 });
 

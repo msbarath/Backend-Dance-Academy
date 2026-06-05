@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const Thread = require("../Models/ThreadModel");
 const Message = require("../Models/MessageModel");
 
@@ -17,7 +18,8 @@ const createThread = async (req, res) => {
         await thread.populate("participants", "firstname lastname email");
         res.status(201).json({ message: "Thread created successfully", data: thread });
     } catch (error) {
-        res.status(500).json({ message: "Error creating thread", error: error.message });
+        console.error("createThread:", error);
+        res.status(500).json({ message: "Error creating thread" });
     }
 };
 
@@ -31,12 +33,14 @@ const getThreads = async (req, res) => {
             .sort({ updatedAt: -1 });
         res.status(200).json({ data: threads });
     } catch (error) {
-        res.status(500).json({ message: "Error fetching threads", error: error.message });
+        console.error("getThreads:", error);
+        res.status(500).json({ message: "Error fetching threads" });
     }
 };
 
 const getThreadById = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const thread = await Thread.findById(req.params.id)
             .populate("creator", "firstname lastname email")
             .populate("participants", "firstname lastname email");
@@ -51,7 +55,8 @@ const getThreadById = async (req, res) => {
 
         res.status(200).json({ data: thread });
     } catch (error) {
-        res.status(500).json({ message: "Error fetching thread", error: error.message });
+        console.error("getThreadById:", error);
+        res.status(500).json({ message: "Error fetching thread" });
     }
 };
 
@@ -60,6 +65,7 @@ const updateThread = async (req, res) => {
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const thread = await Thread.findById(req.params.id);
         if (!thread) return res.status(404).json({ message: "Thread not found" });
 
@@ -74,12 +80,14 @@ const updateThread = async (req, res) => {
 
         res.status(200).json({ message: "Thread updated successfully", data: thread });
     } catch (error) {
-        res.status(500).json({ message: "Error updating thread", error: error.message });
+        console.error("updateThread:", error);
+        res.status(500).json({ message: "Error updating thread" });
     }
 };
 
 const deleteThread = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const thread = await Thread.findById(req.params.id);
         if (!thread) return res.status(404).json({ message: "Thread not found" });
 
@@ -92,7 +100,8 @@ const deleteThread = async (req, res) => {
 
         res.status(200).json({ message: "Thread deleted successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Error deleting thread", error: error.message });
+        console.error("deleteThread:", error);
+        res.status(500).json({ message: "Error deleting thread" });
     }
 };
 
@@ -101,6 +110,7 @@ const addMessage = async (req, res) => {
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const thread = await Thread.findById(req.params.id);
         if (!thread) return res.status(404).json({ message: "Thread not found" });
 
@@ -119,12 +129,14 @@ const addMessage = async (req, res) => {
 
         res.status(201).json({ message: "Message sent successfully", data: message });
     } catch (error) {
-        res.status(500).json({ message: "Error sending message", error: error.message });
+        console.error("addMessage:", error);
+        res.status(500).json({ message: "Error sending message" });
     }
 };
 
 const getMessages = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const thread = await Thread.findById(req.params.id);
         if (!thread) return res.status(404).json({ message: "Thread not found" });
 
@@ -140,7 +152,8 @@ const getMessages = async (req, res) => {
 
         res.status(200).json({ data: messages });
     } catch (error) {
-        res.status(500).json({ message: "Error fetching messages", error: error.message });
+        console.error("getMessages:", error);
+        res.status(500).json({ message: "Error fetching messages" });
     }
 };
 

@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const Attendance = require("../Models/AttendanceModel");
 const Student = require("../Models/StudentModel");
 
@@ -9,7 +10,8 @@ const getAttendance = async (req, res) => {
         const records = await Attendance.find(filter).sort({ date: -1, createdAt: -1 });
         res.json({ data: records });
     } catch (err) {
-        res.status(500).json({ message: "Error fetching attendance", error: err.message });
+        console.error("getAttendance:", err);
+        res.status(500).json({ message: "Error fetching attendance" });
     }
 };
 
@@ -20,6 +22,7 @@ const markAttendance = async (req, res) => {
     try {
         const { studentId, date, status } = req.body;
 
+        if (!mongoose.Types.ObjectId.isValid(studentId)) return res.status(400).json({ message: "Invalid student ID" });
         const student = await Student.findById(studentId);
         if (!student) return res.status(404).json({ message: "Student not found" });
 
@@ -35,12 +38,14 @@ const markAttendance = async (req, res) => {
         });
         res.status(201).json({ message: "Attendance marked", data: record });
     } catch (err) {
-        res.status(500).json({ message: "Error marking attendance", error: err.message });
+        console.error("markAttendance:", err);
+        res.status(500).json({ message: "Error marking attendance" });
     }
 };
 
 const updateAttendance = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const { status } = req.body;
         if (!["Present", "Absent"].includes(status)) {
             return res.status(400).json({ message: "Invalid status" });
@@ -53,17 +58,20 @@ const updateAttendance = async (req, res) => {
         if (!record) return res.status(404).json({ message: "Record not found" });
         res.json({ message: "Attendance updated", data: record });
     } catch (err) {
-        res.status(500).json({ message: "Error updating attendance", error: err.message });
+        console.error("updateAttendance:", err);
+        res.status(500).json({ message: "Error updating attendance" });
     }
 };
 
 const deleteAttendance = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid ID" });
         const record = await Attendance.findByIdAndDelete(req.params.id);
         if (!record) return res.status(404).json({ message: "Record not found" });
         res.json({ message: "Attendance deleted" });
     } catch (err) {
-        res.status(500).json({ message: "Error deleting attendance", error: err.message });
+        console.error("deleteAttendance:", err);
+        res.status(500).json({ message: "Error deleting attendance" });
     }
 };
 

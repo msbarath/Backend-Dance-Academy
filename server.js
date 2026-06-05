@@ -21,6 +21,8 @@ const User             = require("./Models/UserModel");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -45,6 +47,7 @@ const globalLimiter = rateLimit({
     max: 200,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { trustProxy: false },
     message: { message: "Too many requests, please try again later." },
 });
 
@@ -53,6 +56,7 @@ const authLimiter = rateLimit({
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { trustProxy: false },
     message: { message: "Too many auth attempts, please try again later." },
 });
 
@@ -61,19 +65,21 @@ app.use("/api/user/login",          authLimiter);
 app.use("/api/user/signup",         authLimiter);
 app.use("/api/user/reset-password", authLimiter);
 
-const { generateToken: generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+const isProd = process.env.NODE_ENV === "production";
+
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
     getSecret: () => process.env.CSRF_SECRET,
-    cookieName: process.env.NODE_ENV === "production"
-        ? "__Host-psifi.x-csrf-token"
-        : "psifi.x-csrf-token",
+    cookieName: isProd ? "__Host-psifi.x-csrf-token" : "psifi.x-csrf-token",
     cookieOptions: {
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
         signed: true,
         httpOnly: true,
+        path: "/",
     },
 });
 
+app.get("/",              (req, res) => res.json({ message: "Dance Academy API is running" }));
 app.get("/api/health",     (req, res) => res.json({ status: "ok" }));
 app.get("/api/csrf-token", (req, res) => res.json({ csrfToken: generateCsrfToken(req, res) }));
 
@@ -90,6 +96,7 @@ app.use((err, req, res, next) => {
     if (err.code === "EBADCSRFTOKEN") {
         return res.status(403).json({ message: "Invalid CSRF token. Please refresh and try again." });
     }
+    console.error("Unhandled error:", err);
     res.status(500).json({ message: "Internal server error" });
 });
 
@@ -118,7 +125,7 @@ mongoose
     .connect(process.env.MONGODB_URL, {
         maxPoolSize: 10,
         minPoolSize: 2,
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
     })
     .then(async () => {
@@ -138,3 +145,6 @@ async function gracefulShutdown(signal) {
 
 process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled Rejection:", reason);
+});
