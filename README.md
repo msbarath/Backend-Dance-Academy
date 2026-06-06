@@ -1,158 +1,87 @@
 # Dance Academy — Backend
 
-Node.js + Express + MongoDB REST API for the Dance Academy Management System. Includes JWT authentication, CSRF protection, rate limiting, and role-based access control.
+Node.js + Express + MongoDB REST API.
 
----
+## Local Development
 
-## Tech Stack
+```bash
+npm install
+# create .env (see Environment Variables below)
+npm run dev
+```
 
-| Technology        | Usage                              |
-|-------------------|------------------------------------|
-| Node.js           | Runtime                            |
-| Express 5         | Web framework                      |
-| MongoDB + Mongoose| Database and ODM                   |
-| bcryptjs          | Password hashing                   |
-| jsonwebtoken      | JWT auth tokens                    |
-| csrf-csrf         | Double-submit CSRF protection      |
-| cookie-parser     | Signed cookie handling             |
-| helmet            | HTTP security headers              |
-| express-rate-limit| Rate limiting                      |
-| express-validator | Request body validation            |
-| dotenv            | Environment variable loading       |
-
----
-
-## API Endpoints
-
-### Auth — `/api/user`
-| Method | Path              | Access    | Description          |
-|--------|-------------------|-----------|----------------------|
-| POST   | `/signup`         | Public    | Register user        |
-| POST   | `/login`          | Public    | Login user           |
-| POST   | `/reset-password` | Public    | Reset password       |
-| GET    | `/profile`        | Protected | Get own profile      |
-| PUT    | `/profile`        | Protected | Update own profile   |
-| GET    | `/all`            | Admin     | Get all users        |
-| DELETE | `/:id`            | Admin     | Delete user          |
-
-### Courses — `/api/courses`
-| Method | Path    | Access | Description      |
-|--------|---------|--------|------------------|
-| GET    | `/`     | Public | Get all courses  |
-| POST   | `/`     | Admin  | Create course    |
-| PUT    | `/:id`  | Admin  | Update course    |
-| DELETE | `/:id`  | Admin  | Delete course    |
-
-### Students — `/api/students`
-| Method | Path      | Access | Description        |
-|--------|-----------|--------|--------------------|
-| GET    | `/count`  | Public | Get student count  |
-| GET    | `/`       | Admin  | Get all students   |
-| POST   | `/`       | Admin  | Enroll student     |
-| PUT    | `/:id`    | Admin  | Update student     |
-| DELETE | `/:id`    | Admin  | Delete student     |
-
-### Attendance — `/api/attendance`
-| Method | Path   | Access | Description           |
-|--------|--------|--------|-----------------------|
-| GET    | `/`    | Admin  | Get attendance records |
-| POST   | `/`    | Admin  | Mark attendance        |
-| PUT    | `/:id` | Admin  | Update attendance      |
-| DELETE | `/:id` | Admin  | Delete record          |
-
-### Fees — `/api/fees`
-| Method | Path   | Access | Description      |
-|--------|--------|--------|------------------|
-| GET    | `/`    | Admin  | Get fee records  |
-| POST   | `/`    | Admin  | Record payment   |
-| PUT    | `/:id` | Admin  | Update payment   |
-| DELETE | `/:id` | Admin  | Delete record    |
-
-### Events — `/api/events`
-| Method | Path   | Access | Description    |
-|--------|--------|--------|----------------|
-| GET    | `/`    | Public | Get all events |
-| POST   | `/`    | Admin  | Create event   |
-| PUT    | `/:id` | Admin  | Update event   |
-| DELETE | `/:id` | Admin  | Delete event   |
-
-### Contact — `/api/contact`
-| Method | Path   | Access | Description        |
-|--------|--------|--------|--------------------|
-| GET    | `/`    | Admin  | Get all messages   |
-| POST   | `/`    | Public | Send message       |
-| DELETE | `/:id` | Admin  | Delete message     |
-
-### Threads — `/api/threads`
-| Method | Path               | Access    | Description        |
-|--------|--------------------|-----------|--------------------|
-| GET    | `/`                | Protected | Get user threads   |
-| POST   | `/`                | Protected | Create thread      |
-| GET    | `/:id`             | Protected | Get thread by ID   |
-| PUT    | `/:id`             | Protected | Update thread      |
-| DELETE | `/:id`             | Protected | Delete thread      |
-| GET    | `/:id/messages`    | Protected | Get messages       |
-| POST   | `/:id/messages`    | Protected | Send message       |
-
-### Utility
-| Method | Path            | Description         |
-|--------|-----------------|---------------------|
-| GET    | `/api/health`   | Health check        |
-| GET    | `/api/csrf-token` | Get CSRF token    |
-
----
+Server runs on `http://localhost:5000`.
 
 ## Environment Variables
 
-Create a `.env` file in the backend root:
+Create a `.env` file in this directory:
 
 ```
-MONGODB_URL=your_mongodb_atlas_connection_string
-CLIENT_URL=http://localhost:3000
-CSRF_SECRET=your_csrf_secret
-COOKIE_SECRET=your_cookie_secret
+MONGODB_URL=mongodb+srv://<user>:<password>@cluster.mongodb.net/DanceAcademy?retryWrites=true&w=majority
+PORT=5000
 NODE_ENV=development
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=<min-32-char-random-string>
 JWT_EXPIRES_IN=7d
+CSRF_SECRET=<min-32-char-random-string>
+COOKIE_SECRET=<min-32-char-random-string>
+CLIENT_URL=http://localhost:3000
 ADMIN_EMAIL=admin@gmail.com
 ADMIN_PASSWORD=Admin@123
 ```
 
-For production (Render), set these in the Render dashboard:
+## Deploy on Render
 
-```
-NODE_ENV=production
-CLIENT_URL=https://your-app.netlify.app
-```
+1. Push backend to a GitHub repo.
+2. Create a new **Web Service** on [Render](https://render.com).
+3. Set **Build Command**: `npm install`
+4. Set **Start Command**: `npm start`
+5. Add all environment variables from the list above in Render's dashboard.
+   - Set `NODE_ENV=production`
+   - Set `CLIENT_URL` to your Netlify frontend URL (e.g. `https://your-app.netlify.app`)
+   - Render sets `PORT` automatically — you can omit it or leave it as `5000`.
+6. Deploy. Note your service URL (e.g. `https://dance-academy-backend.onrender.com`).
 
-All other variables remain the same.
+## API Endpoints
 
----
-
-## Getting Started
-
-```bash
-npm install
-npm run dev
-```
-
-Server runs at [http://localhost:5000](http://localhost:5000).
-
----
-
-## Scripts
-
-| Script        | Description                   |
-|---------------|-------------------------------|
-| `npm start`   | Start with Node (production)  |
-| `npm run dev` | Start with Nodemon (dev)      |
-
----
-
-## Deployment — Render
-
-- Build command: `npm install`
-- Start command: `node server.js`
-- Add all environment variables in Render → Environment tab.
-- The `engines` field in `package.json` pins Node `>=18`.
-- `SIGTERM` is handled for graceful shutdown on Render restarts.
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | /api/health | Public | Health check |
+| GET | /api/csrf-token | Public | Get CSRF token |
+| POST | /api/user/signup | Public | Register |
+| POST | /api/user/login | Public | Login |
+| POST | /api/user/reset-password | Public | Reset password |
+| GET | /api/user/profile | User | Get profile |
+| PUT | /api/user/profile | User | Update profile |
+| GET | /api/user/all | Admin | List users |
+| DELETE | /api/user/:id | Admin | Delete user |
+| GET | /api/courses | Public | List courses |
+| POST | /api/courses | Admin | Add course |
+| PUT | /api/courses/:id | Admin | Update course |
+| DELETE | /api/courses/:id | Admin | Delete course |
+| GET | /api/students/count | Public | Student count |
+| GET | /api/students | Admin | List students |
+| POST | /api/students | Admin | Enroll student |
+| PUT | /api/students/:id | Admin | Update student |
+| DELETE | /api/students/:id | Admin | Delete student |
+| GET | /api/attendance | Admin | List attendance |
+| POST | /api/attendance | Admin | Mark attendance |
+| PUT | /api/attendance/:id | Admin | Update record |
+| DELETE | /api/attendance/:id | Admin | Delete record |
+| GET | /api/fees | Admin | List fees |
+| POST | /api/fees | Admin | Record fee |
+| PUT | /api/fees/:id | Admin | Update fee |
+| DELETE | /api/fees/:id | Admin | Delete fee |
+| GET | /api/events | Public | List events |
+| POST | /api/events | Admin | Add event |
+| PUT | /api/events/:id | Admin | Update event |
+| DELETE | /api/events/:id | Admin | Delete event |
+| GET | /api/contact | Admin | List messages |
+| POST | /api/contact | Public | Send message |
+| DELETE | /api/contact/:id | Admin | Delete message |
+| GET | /api/threads | User | List threads |
+| POST | /api/threads | User | Create thread |
+| GET | /api/threads/:id | User | Get thread |
+| PUT | /api/threads/:id | User | Update thread |
+| DELETE | /api/threads/:id | User | Delete thread |
+| GET | /api/threads/:id/messages | User | Get messages |
+| POST | /api/threads/:id/messages | User | Send message |
