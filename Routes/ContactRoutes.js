@@ -1,8 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
+const rateLimit = require("express-rate-limit");
 const { protect, adminOnly } = require("../Utils/authMiddleware");
 const { getContacts, createContact, deleteContact } = require("../Controllers/ContactController");
+
+const contactLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many contact requests, please try again later." },
+});
 
 const contactValidation = [
     body("name").trim().notEmpty().withMessage("Name is required"),
@@ -11,7 +20,7 @@ const contactValidation = [
 ];
 
 router.get("/", protect, adminOnly, getContacts);
-router.post("/", contactValidation, createContact);
+router.post("/", contactLimiter, contactValidation, createContact);
 router.delete("/:id", protect, adminOnly, deleteContact);
 
 module.exports = router;

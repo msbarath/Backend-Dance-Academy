@@ -8,7 +8,7 @@ const courseValidation = [
     body("name").trim().notEmpty().withMessage("Course name is required"),
     body("instructor").trim().notEmpty().withMessage("Instructor is required"),
     body("schedule").trim().notEmpty().withMessage("Schedule is required"),
-    body("fee").isNumeric().withMessage("Fee must be a number"),
+    body("fee").isFloat({ min: 1 }).withMessage("Fee must be a positive number"),
 ];
 
 router.get("/",       getCourses);

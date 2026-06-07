@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 const { body } = require("express-validator");
 const { protect } = require("../Utils/authMiddleware");
 const {
@@ -10,33 +10,28 @@ const {
     deleteThread,
     addMessage,
     getMessages,
+    updateMessage,
+    deleteMessage,
 } = require("../Controllers/ThreadController");
 
 router.use(protect);
 
-router.post(
-    "/",
-    [body("title").trim().notEmpty().withMessage("Thread title is required")],
-    createThread
-);
+const titleValidation   = body("title").trim().notEmpty().withMessage("Thread title is required");
+const contentValidation = body("content")
+    .trim().notEmpty().withMessage("Message content is required")
+    .isLength({ max: 1000 }).withMessage("Message cannot exceed 1000 characters");
 
-router.get("/", getThreads);
-router.get("/:id", getThreadById);
+// Thread CRUD
+router.post("/",    [titleValidation],   createThread);
+router.get("/",                          getThreads);
+router.get("/:id",                       getThreadById);
+router.put("/:id",  [titleValidation],   updateThread);
+router.delete("/:id",                    deleteThread);
 
-router.put(
-    "/:id",
-    [body("title").trim().notEmpty().withMessage("Thread title is required")],
-    updateThread
-);
-
-router.delete("/:id", deleteThread);
-
-router.post(
-    "/:id/messages",
-    [body("content").trim().notEmpty().withMessage("Message content is required")],
-    addMessage
-);
-
-router.get("/:id/messages", getMessages);
+// Message CRUD
+router.post("/:id/messages",               [contentValidation], addMessage);
+router.get("/:id/messages",                                     getMessages);
+router.put("/:id/messages/:msgId",         [contentValidation], updateMessage);
+router.delete("/:id/messages/:msgId",                           deleteMessage);
 
 module.exports = router;

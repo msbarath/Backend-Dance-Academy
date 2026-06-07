@@ -2,13 +2,17 @@ services:
   - type: web
     name: dance-academy-backend
     runtime: node
-    buildCommand: npm install
+    plan: free
+    region: oregon
+    buildCommand: npm install --omit=dev
     startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: false
     envVars:
+      - key: NODE_VERSION
+        value: 20
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
       - key: MONGODB_URL
         sync: false
       - key: JWT_SECRET
@@ -24,4 +28,14 @@ services:
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
         sync: false
