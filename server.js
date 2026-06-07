@@ -6,7 +6,6 @@ const compression    = require("compression");
 const cookieParser   = require("cookie-parser");
 const rateLimit      = require("express-rate-limit");
 const mongoSanitize  = require("express-mongo-sanitize");
-const { doubleCsrf } = require("csrf-csrf");
 
 require("dotenv").config();
 
@@ -19,8 +18,8 @@ const feeRoutes        = require("./Routes/FeeRoutes");
 const eventRoutes      = require("./Routes/EventRoutes");
 const contactRoutes    = require("./Routes/ContactRoutes");
 
-if (!process.env.CSRF_SECRET || !process.env.COOKIE_SECRET || !process.env.JWT_SECRET) {
-    console.error("FATAL: Missing required environment variables (CSRF_SECRET, COOKIE_SECRET, JWT_SECRET)");
+if (!process.env.COOKIE_SECRET || !process.env.JWT_SECRET) {
+    console.error("FATAL: Missing required environment variables (COOKIE_SECRET, JWT_SECRET)");
     process.exit(1);
 }
 
@@ -117,17 +116,6 @@ app.use("/api/user/reset-password", authLimiter);
 
 const isProd = process.env.NODE_ENV === "production";
 
-const { generateToken: generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
-    getSecret:     () => process.env.CSRF_SECRET,
-    cookieName:    "psifi.x-csrf-token",
-    cookieOptions: {
-        sameSite: isProd ? "none" : "lax",
-        secure:   isProd,
-        httpOnly: true,
-        path:     "/",
-    },
-});
-
 app.get("/",              (_req, res) => res.json({ message: "Dance Academy API is running" }));
 app.get("/api/health", (_req, res) => {
     const dbState = mongoose.connection.readyState;
@@ -142,25 +130,7 @@ app.get("/api/db-status", (_req, res) => {
     res.json({ db: states[state] || "unknown", readyState: state });
 });
 
-app.get("/api/csrf-token", (req, res) => {
-    try {
-        const token = generateCsrfToken(req, res);
-        res.json({ csrfToken: token });
-    } catch {
-        res.status(500).json({ message: "Failed to generate CSRF token" });
-    }
-});
-
-app.use((req, _res, next) => {
-    const bypassed = [
-        "/api/user/login",
-        "/api/user/signup",
-        "/api/user/request-reset",
-        "/api/user/reset-password",
-    ];
-    if (bypassed.includes(req.path)) return next();
-    return doubleCsrfProtection(req, _res, next);
-});
+app.get("/api/csrf-token", (_req, res) => res.json({ csrfToken: "disabled" }));
 
 app.use("/api/user",       userRoutes);
 app.use("/api/threads",    threadRoutes);
@@ -173,13 +143,7 @@ app.use("/api/contact",    contactRoutes);
 
 app.use((err, req, res, _next) => {
     if (
-        err.code === "EBADCSRFTOKEN" ||
-        (err.status === 403 && err.message?.toLowerCase().includes("csrf")) ||
-        err.message?.toLowerCase().includes("invalid csrf")
-    ) {
-        return res.status(403).json({ message: "Invalid CSRF token. Please refresh and try again." });
-    }
-    if (err.message && err.message.startsWith("CORS:")) {
+        err.message && err.message.startsWith("CORS:")) {
         return res.status(403).json({ message: err.message });
     }
     const message = isProd ? "Internal server error" : (err.message || "Internal server error");
