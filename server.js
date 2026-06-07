@@ -119,7 +119,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 const { generateToken: generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
     getSecret:     () => process.env.CSRF_SECRET,
-    cookieName:    isProd ? "__Host-psifi.x-csrf-token" : "psifi.x-csrf-token",
+    cookieName:    "psifi.x-csrf-token",
     cookieOptions: {
         sameSite: isProd ? "none" : "lax",
         secure:   isProd,
