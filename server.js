@@ -151,7 +151,16 @@ app.get("/api/csrf-token", (req, res) => {
     }
 });
 
-app.use(doubleCsrfProtection);
+app.use((req, _res, next) => {
+    const bypassed = [
+        "/api/user/login",
+        "/api/user/signup",
+        "/api/user/request-reset",
+        "/api/user/reset-password",
+    ];
+    if (bypassed.includes(req.path)) return next();
+    return doubleCsrfProtection(req, _res, next);
+});
 
 app.use("/api/user",       userRoutes);
 app.use("/api/threads",    threadRoutes);
